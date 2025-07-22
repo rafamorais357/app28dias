@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HÁBITOS 3.5.7 – Protocolo de 28 Dias</title>
+<style>
+  /* Cores originais para o corpo do site */
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f9f9f9;
+    color: #222;
+    margin: 0;
+    padding: 1rem;
+    max-width: 600px;
+    margin-inline: auto;
+  }
+  h1 {
+    text-align: center;
+    color: #2e7d32;
+    margin-bottom: 1rem;
+  }
+  .intro {
+    text-align: center;
+    margin-bottom: 2rem;
+    font-weight: 600;
+  }
+  .btn-dia-atual {
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  .btn-dia-atual button {
+    padding: 0.6rem 1.2rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 6px;
+    background: #81c784;
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  .btn-dia-atual button:hover {
+    background: #4caf50;
+  }
+  .progress-container {
+    background: #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+    height: 16px;
+    max-width: 500px;
+    margin: 1rem auto 2rem auto;
+  }
+  .progress-bar {
+    height: 100%;
+    width: 0%;
+    background: #4caf50;
+    transition: width 0.4s ease;
+  }
+  .dias-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .dia {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 3px 7px rgb(0 0 0 / 0.08);
+    padding: 1rem 1.2rem;
+    position: relative;
+    transition: opacity 0.3s ease, box-shadow 0.3s ease;
+    min-height: 100px;
+  }
+  .dia.concluido {
+    opacity: 0.8;
+    background: #c8d6c9;
+    pointer-events: none;
+    padding: 1rem 1.2rem;
+    min-height: auto;
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: #2e7d32;
+    justify-content: center;
+    box-shadow: inset 0 0 5px rgb(46 125 50 / 0.3);
+  }
+  .dia.destaque {
+    box-shadow: 0 0 15px 4px #4caf50;
+    border: 3px solid #4caf50;
+  }
+  .dia.bloqueado {
+    opacity: 0.35;
+    pointer-events: none;
+    position: relative;
+  }
+  .dia.bloqueado::after {
+    content: "🔒 Conclua o dia anterior para desbloquear";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #555;
+    font-weight: 600;
+    font-size: 1rem;
+    background: rgba(255 255 255 / 0.9);
+    padding: 0.4rem 0.8rem;
+    border-radius: 12px;
+    text-align: center;
+    width: 80%;
+    box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    pointer-events: none;
+  }
+  .tarefa-dia {
+    font-size: 1.1rem;
+    cursor: pointer;
+  }
+  /* Modal Inspiração */
+  #modalInsp {
+    display: none;
+    position: fixed;
+    top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,0.6);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    padding: 1rem;
+  }
+  #modalInsp.active {
+    display: flex;
+  }
+  #modalInsp .modal-content {
+    background: #e8f5e9;
+    max-width: 600px;
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+    text-align: center;
+    color: #2e7d32;
+    font-size: 1.1rem;
+    line-height: 1.4;
+    position: relative;
+  }
+  #modalInsp .modal-content h2 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+  }
+  #modalInsp .modal-content button {
+    background: #4caf50;
+    border: none;
+    color: white;
+    font-weight: 700;
+    padding: 0.5rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 3px 7px rgba(76,175,80,0.6);
+    transition: background 0.3s;
+    margin-top: 1rem;
+  }
+  #modalInsp .modal-content button:hover {
+    background: #2e7d32;
+  }
+  /* Introdução expansível */
+  #introducao {
+    background: #e8f5e9;
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    box-shadow: 0 3px 7px rgba(46,125,50,0.15);
+    margin-bottom: 1.5rem;
+  }
+  #introResumo {
+    font-size: 1rem;
+    margin-bottom: 0.8rem;
+  }
+  #introCompleto {
+    font-size: 1rem;
+    line-height: 1.4;
+    margin-bottom: 0.8rem;
+    display: none;
+    text-align: justify;
+  }
+  #btnExpandir, #btnLido {
+    background: #4caf50;
+    border: none;
+    color: white;
+    font-weight: 700;
+    padding: 0.4rem 1.2rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s;
+    font-size: 0.95rem;
+  }
+  #btnExpandir:hover, #btnLido:hover {
+    background: #2e7d32;
+  }
+  /* Bloco Explicação da Semana (cores do YouTube em vermelho) */
+  .dia.explicacao {
+    background: #ffdddd;  /* tom vermelho claro */
+    color: #b71c1c;       /* vermelho escuro */
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 500;
+    pointer-events: auto;
+    padding: 1rem 1.2rem;
+    border-radius: 10px;
+    box-shadow: 0 3px 7px rgba(183, 28, 28, 0.3);
+  }
+  .dia.explicacao h3 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+  }
+  .dia.explicacao p {
+    margin: 0 0 0.8rem 0;
+  }
+  .dia.explicacao a {
+    color: #b71c1c;
+    font-weight: bold;
+    text-decoration: underline;
+  }
+  .dia.explicacao a:hover {
+    color: #7f0000;
+  }
+  /* Botão RESET no topo esquerdo fixo */
+  #btnReset {
+  position: fixed;
+  top: 10px;
+  left: 20px;
+  font-size: 40px;        /* Igual ao cronômetro */
+  background: transparent; /* Sem fundo */
+  color: red;             /* Cor vermelha */
+  border: none;           /* Sem borda */
+  cursor: pointer;
+  user-select: none;
+  z-index: 10000;
+  padding: 0;             /* Remove espaçamento */
+  width: auto;            /* Ajusta largura para o emoji */
+  height: auto;           /* Ajusta altura para o emoji */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;       /* Remove sombra */
+}
+  #btnReset.hide {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Emoji timer fixo no topo direito */
+  #emojiTimer {
+    position: fixed;
+    top: 25px;
+    right: 20px;
+    font-size: 26px;
+    cursor: pointer;
+    user-select: none;
+    z-index: 10000;
+    transition: opacity 0.3s;
+    opacity: 1;
+    text-decoration: none;
+    color: inherit;
+  }
+  #emojiTimer.hide {
+    opacity: 0;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<button id="btnReset" aria-label="Resetar progresso do protocolo">☯</button>
+<a id="emojiTimer" href="https://rafamorais357.github.io/cronometro" target="_blank" rel="noopener noreferrer" aria-label="Abrir cronômetro" title="Abrir cronômetro">🕖</a>
+
+<h1>HÁBITOS 3.5.7</h1>
+<p class="intro">Protocolo de 28 Dias por Rafa Morais</p>
+
+<div class="btn-dia-atual">
+  <button onclick="irParaDiaAtual()">Ir para o Dia Atual</button>
+</div>
+
+<div class="progress-container">
+  <div id="progressBar" class="progress-bar"></div>
+</div>
+
+<!-- Introdução expansível -->
+<div id="introducao" role="region" aria-label="Introdução ao método hábitos">
+  <h3>Introdução</h3>
+  <p id="introResumo">
+    Vivemos correndo, distraídos, buscando equilíbrio entre o que sentimos, pensamos e fazemos. O método HÁBITOS 3.5.7 nasceu como uma resposta simples para um problema complexo... 
+    <button id="btnExpandir" aria-expanded="false" aria-controls="introCompleto">Ler mais</button>
+  </p>
+  <div id="introCompleto" tabindex="0">
+    <p>
+      Com apenas 5 minutos por dia, durante 7 dias, você começa a transformar seus 3 pilares fundamentais: corpo, mente e espírito.
+    </p>
+    <p>
+      "Você não precisa ser perfeito, só precisa estar disposto a caminhar."
+    </p>
+    <p><strong>O que são os HÁBITOS 3.5.7?</strong></p>
+    <ul>
+      <li>3 pilares: Corpo, Mente e Espírito</li>
+      <li>5 minutos por pilar: A base mínima diária</li>
+      <li>7 dias por semana: Constância, não perfeição</li>
+    </ul>
+    <p>
+      É um método acessível, mas profundo. Começamos pequenos para gerar grandes mudanças com o tempo.
+    </p>
+    <p><strong>Como usar este guia</strong></p>
+    <ul>
+      <li>Faça uma leitura por semana e siga os hábitos propostos</li>
+      <li>Use um caderno ou aplicativo para acompanhar seu progresso</li>
+      <li>Permita-se adaptar conforme sua realidade</li>
+      <li>No final de cada semana, reflita: O que mudou em mim?</li>
+    </ul>
+    <p><strong>Semana 1 — Fundamentos Iniciais</strong></p>
+    <p>Objetivo: Criar espaço na rotina e iniciar os 3 pilares com suavidade.</p>
+    <ul>
+      <li>Corpo: Caminhada leve (5 minutos por dia)</li>
+      <li>Mente: Leitura de desenvolvimento pessoal (mínimo 5 minutos por dia)</li>
+      <li>Espírito: Meditação curta (5 minutos por dia)</li>
+    </ul>
+    <button id="btnLido" aria-label="Minimizar introdução">Lido</button>
+  </div>
+</div>
+
+<div id="dias" class="dias-lista">
+  <!-- Dias e blocos explicação criados pelo JS -->
+</div>
+
+<section id="encerramento" style="display:none; text-align:center; margin-top: 2rem;">
+  <h2>Encerramento</h2>
+  <p>Você acaba de atravessar 28 dias de prática consciente. Algo já começou a mudar dentro de você.</p>
+  <p>Continue. Volte sempre que quiser. O despertar não é um destino. É uma jornada.</p>
+  <p>🌱 Continue caminhando com leveza.</p>
+</section>
+
+<!-- Modal Inspiração -->
+<div id="modalInsp" aria-modal="true" role="dialog" tabindex="-1">
+  <div class="modal-content">
+    <h2>Inspiração de hoje</h2>
+    <p id="textoInsp"></p>
+    <button onclick="fecharModal()">Gratidão</button>
+  </div>
+</div>
+
+<script>
+  const totalDias = 28;
+  let diasConcluidos = [];
+  let diaAtual = 1;
+
+  const mensagensInspiradoras = [
+    "Você está construindo uma base sólida para uma vida mais equilibrada.",
+    "Cada pequeno passo é um grande avanço na sua jornada pessoal.",
+    "A mudança começa dentro de você, e você está fazendo acontecer.",
+    "Parabéns por sua dedicação! Continue firme e consciente.",
+    "Respire fundo e sinta o poder do seu compromisso consigo mesmo.",
+    "Sua disciplina hoje é a liberdade do amanhã.",
+    "Cultivar bons hábitos é um ato de amor próprio e respeito.",
+    "O verdadeiro crescimento vem da constância e da paciência.",
+    "A cada dia você se torna a melhor versão de si mesmo.",
+    "Seja gentil consigo e celebre suas conquistas diárias.",
+    "A jornada pode ser lenta, mas a transformação é real.",
+    "A força está em persistir, mesmo quando tudo parece difícil.",
+    "Você é capaz de superar desafios e criar mudanças duradouras.",
+    "Hoje é um novo começo para o seu equilíbrio e bem-estar.",
+    "A gratidão abre portas para mais coisas boas em sua vida.",
+    "Seu esforço diário é o que constrói a sua liberdade interior.",
+    "Encontre paz no processo, não apenas no resultado final.",
+    "O cuidado com o corpo, mente e espírito traz harmonia completa.",
+    "Cada hábito positivo multiplica sua energia e clareza mental.",
+    "A consciência de hoje é a transformação de amanhã.",
+    "Você merece o tempo e atenção que dedica ao seu crescimento.",
+    "Continue firme, mesmo quando o caminho parecer longo.",
+    "O autoconhecimento é a chave para sua verdadeira evolução.",
+    "Valorize cada passo dado, mesmo os mais simples.",
+    "Seja sua própria inspiração e motivação todos os dias.",
+    "Respirar, agir e refletir: o ciclo do seu desenvolvimento pessoal.",
+    "Permita-se crescer com amor e paciência.",
+    "A consistência cria raízes fortes em sua nova rotina.",
+    "Você está no caminho certo, continue com coragem e fé."
+  ];
+
+  function criarDias() {
+    const container = document.getElementById('dias');
+    const explicacoes = {
+      8: {
+        titulo: 'Semana 2 — Fortalecimento dos Pilares',
+        texto: 'Novas práticas que aprofundarão sua conexão com você mesmo.',
+        url: 'https://www.youtube.com/SEU-LINK-SEMANA-1'
+      },
+      15: {
+        titulo: 'Semana 3 — Expansão da Consciência',
+        texto: 'Este vídeo aprofunda os conceitos e práticas da terceira semana.',
+        url: 'https://www.youtube.com/SEU-LINK-SEMANA-2'
+      },
+      22: {
+        titulo: 'Semana 4 — Integração e Propósito',
+        texto: 'Consolidação dos hábitos e realização de rituais de integração.',
+        url: 'https://www.youtube.com/SEU-LINK-SEMANA-3'
+      }
+    };
+
+    for(let i = 1; i <= totalDias; i++) {
+      // Cria dia
+      const diaEl = document.createElement('div');
+      diaEl.className = 'dia';
+      diaEl.id = `dia${i}`;
+      diaEl.dataset.dia = i;
+
+      // Se tem explicação para essa posição (antes do dia 9, 16, 23), insere bloco explicação vermelho
+      if (explicacoes[i]) {
+        const blocoExp = document.createElement('div');
+        blocoExp.className = 'dia explicacao';
+        blocoExp.innerHTML = `
+          <h3>${explicacoes[i].titulo}</h3>
+          <p>${explicacoes[i].texto}</p>
+          <p><a href="${explicacoes[i].url}" target="_blank" rel="noopener noreferrer">Assista ao vídeo explicativo</a></p>
+        `;
+        container.appendChild(blocoExp);
+      }
+
+      container.appendChild(diaEl);
+    }
+  }
+
+  function atualizarVisualDias() {
+    for(let i = 1; i <= totalDias; i++) {
+      const diaEl = document.getElementById(`dia${i}`);
+      diaEl.classList.remove('concluido', 'destaque', 'bloqueado');
+      diaEl.innerHTML = '';
+
+      if (diasConcluidos.includes(i)) {
+        diaEl.classList.add('concluido');
+        diaEl.textContent = `Dia ${i.toString().padStart(2,'0')} concluído ✅`;
+      } else if (i === diaAtual) {
+        diaEl.classList.add('destaque');
+        diaEl.innerHTML = `
+          <h3>Dia ${i.toString().padStart(2,'0')}</h3>
+          <div class="tarefa-dia">
+            <label><input type="checkbox"> Missões do dia concluídas</label>
+          </div>
+        `;
+        const checkbox = diaEl.querySelector('input[type=checkbox]');
+        checkbox.disabled = false;
+        checkbox.checked = false;
+
+        checkbox.addEventListener('change', e => {
+          if (e.target.checked) {
+            concluirDia(i);
+          }
+        });
+
+      } else {
+        diaEl.classList.add('bloqueado');
+        diaEl.innerHTML = `<h3>Dia ${i.toString().padStart(2,'0')}</h3>`;
+      }
+    }
+  }
+
+  function concluirDia(dia) {
+    if (!diasConcluidos.includes(dia)) {
+      diasConcluidos.push(dia);
+      diasConcluidos.sort((a,b) => a-b);
+    }
+    if (diaAtual === dia) diaAtual++;
+    salvarEstado();
+    atualizarVisualDias();
+    atualizarProgressBar();
+    mostrarInspiracao(dia);
+
+    if (diaAtual > totalDias) {
+      mostrarEncerramento();
+    }
+  }
+
+  function salvarEstado() {
+    localStorage.setItem('habitosDiasConcluidos', JSON.stringify(diasConcluidos));
+    localStorage.setItem('habitosDiaAtual', diaAtual);
+  }
+
+  function carregarEstado() {
+    const diasSalvos = localStorage.getItem('habitosDiasConcluidos');
+    const diaAtualSalvo = localStorage.getItem('habitosDiaAtual');
+    if (diasSalvos) diasConcluidos = JSON.parse(diasSalvos);
+    if (diaAtualSalvo) diaAtual = parseInt(diaAtualSalvo);
+  }
+
+  function atualizarProgressBar() {
+    const prog = document.getElementById('progressBar');
+    const pct = (diasConcluidos.length / totalDias) * 100;
+    prog.style.width = pct + '%';
+  }
+
+  function mostrarInspiracao(dia) {
+    const modal = document.getElementById('modalInsp');
+    const texto = document.getElementById('textoInsp');
+    texto.textContent = mensagensInspiradoras[(dia - 1) % mensagensInspiradoras.length];
+    modal.classList.add('active');
+    modal.focus();
+  }
+  function fecharModal() {
+    document.getElementById('modalInsp').classList.remove('active');
+  }
+
+  function irParaDiaAtual() {
+    const diaAtualEl = document.getElementById(`dia${diaAtual}`);
+    if (diaAtualEl) {
+      diaAtualEl.scrollIntoView({behavior: 'smooth', block: 'center'});
+    }
+  }
+
+  // Introdução expansível
+  const btnExpandir = document.getElementById('btnExpandir');
+  const introCompleto = document.getElementById('introCompleto');
+  const btnLido = document.getElementById('btnLido');
+  btnExpandir.addEventListener('click', () => {
+    const expanded = btnExpandir.getAttribute('aria-expanded') === 'true';
+    if (!expanded) {
+      introCompleto.style.display = 'block';
+      btnExpandir.setAttribute('aria-expanded', 'true');
+      btnExpandir.style.display = 'none';
+    }
+  });
+  btnLido.addEventListener('click', () => {
+    introCompleto.style.display = 'none';
+    btnExpandir.setAttribute('aria-expanded', 'false');
+    btnExpandir.style.display = 'inline-block';
+  });
+
+  // Botão resetar progresso
+  const btnReset = document.getElementById('btnReset');
+  const emojiTimer = document.getElementById('emojiTimer');
+
+  btnReset.addEventListener('click', () => {
+    if (confirm('Tem certeza que deseja resetar seu progresso e começar do dia 1?')) {
+      localStorage.removeItem('habitosDiasConcluidos');
+      localStorage.removeItem('habitosDiaAtual');
+      location.reload();
+    }
+  });
+
+  // Mostrar/ocultar botão reset e emojiTimer conforme scroll
+  function verificarPosicaoScroll() {
+    if (window.scrollY > 50) {
+      btnReset.classList.add('hide');
+      emojiTimer.classList.add('hide');
+    } else {
+      btnReset.classList.remove('hide');
+      emojiTimer.classList.remove('hide');
+    }
+  }
+  window.addEventListener('scroll', verificarPosicaoScroll);
+
+  // Inicialização
+  carregarEstado();
+  criarDias();
+  atualizarVisualDias();
+  atualizarProgressBar();
+  verificarPosicaoScroll();
+
+  // Mostrar encerramento se já terminou
+  function mostrarEncerramento() {
+    document.getElementById('encerramento').style.display = 'block';
+  }
+  if (diaAtual > totalDias) mostrarEncerramento();
+</script>
+
+</body>
+</html>
