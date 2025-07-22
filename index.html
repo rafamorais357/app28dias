@@ -262,13 +262,14 @@
     opacity: 0;
     pointer-events: none;
   }
-  .rodape {
-  background-color: #000;     /* Fundo preto */
-  color: #fff;                /* Texto branco */
+ .rodape {
+  color: #000; /* Texto preto, ou troque se quiser outra cor */
   text-align: center;
-  padding: 20px;
+  padding: 16px 0;
   font-size: 0.9em;
-  margin-top: 60px;
+  width: 100%;
+  margin: 0;
+  border: none;
 }
 </style>
 </head>
@@ -549,7 +550,10 @@
 </script>
 
 <footer class="rodape">
-  <p>Copyright © - Hábitos 3.5.7</p>
+  <div class="rodape-conteudo">
+    Copyright © - Hábitos 3.5.7
+  </div>
 </footer>
 </body>
 </html>
+
